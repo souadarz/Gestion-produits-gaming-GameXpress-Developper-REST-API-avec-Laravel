@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminDashboardController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\Admin\authController;
@@ -14,6 +15,7 @@ Route::prefix('v1/admin')->group(function () {
     
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/logout', [authController::class, 'logout']);
+        Route::get('/dashboard', [AdminDashboardController::class, 'AdminDashboard']);
         
     });
 });

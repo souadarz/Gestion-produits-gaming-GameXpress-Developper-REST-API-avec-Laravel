@@ -22,6 +22,7 @@ class authController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             ]);
+
         if(User::count() === 1){
             $user->assignRole('super_admin');
         } else {
@@ -54,7 +55,6 @@ class authController extends Controller
         }
 
         $token = $user->createToken('auth_token');
-
         return response()->json([
             'user' => $user,
             'token' => $token->plainTextToken

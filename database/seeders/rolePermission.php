@@ -32,7 +32,7 @@ class rolePermission extends Seeder
                 $roleInstance->syncPermissions(['view_products','create_products','edit_products','delete_products']);
             } elseif ($role === 'user_manager'){
                 $roleInstance->syncPermissions([ 'view_users', 'create_users', 'edit_users', 'delete_users']);
-            } else {
+            } elseif ($role === 'guest'){
                 $roleInstance->syncPermissions(['view_products']);
             }
         }

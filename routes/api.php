@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\Admin\authController;
 use App\Http\controllers\Api\V1\Admin\CategoryController;
 use App\Http\Controllers\Api\V1\Admin\ProductController;
+use App\Http\Controllers\Api\V1\Admin\UserController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -35,7 +36,10 @@ Route::prefix('v1/admin')->group(function () {
             Route::get('/categories/{id}', [categoryController::class, 'show'])->name('category.show');
             Route::put('/categories/{id}', [categoryController::class, 'update'])->name('category.update');
             Route::delete('/categories/{id}', [categoryController::class, 'destroy'])->name('category.destroy');
-        // Route::apiResource('/products',ProductController::class);
+        });
+            
+        Route::middleware(['role:super_admin|user_manager'])->group(function(){
+            Route::apiResource('users',UserController::class);
         });
     });
 });

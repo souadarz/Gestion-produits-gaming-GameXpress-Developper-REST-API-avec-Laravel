@@ -50,12 +50,13 @@ class CategoryTest extends TestCase
         $user->assignRole("product_manager");
         $this->actingAs($user);
     
+        $category = Category::factory()->create();
         $Updatedata = [
             'name' => 'test category',
             'slug' => 'test-category',
         ];
         
-        $response = $this->postJson(route('categories.store'),$Updatedata);
+        $response = $this->putJson(route('category.update',$category->id),$Updatedata);
 
         $response->assertStatus(200)
                  ->assertJsonFragment([

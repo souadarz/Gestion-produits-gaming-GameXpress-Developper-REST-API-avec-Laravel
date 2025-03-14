@@ -21,12 +21,15 @@ Route::prefix('v1/admin')->group(function () {
         Route::post('/logout', [authController::class, 'logout']);
         Route::get('/dashboard', [AdminDashboardController::class, 'AdminDashboard']);
         Route::middleware(['role:super_admin|product_manager'])->group(function(){
+            // route product
             Route::get('/products', [ProductController::class, 'index'])->name('products.index');
             Route::post('/products', [ProductController::class, 'store'])->name('products.store');
             Route::get('/products/{id}', [ProductController::class, 'show'])->name('product.show');
             Route::put('/products/{id}', [ProductController::class, 'update'])->name('product.update');
             Route::delete('/products/{id}', [ProductController::class, 'destroy'])->name('product.destroy');
-
+            
+            // Route::apiResource('/products', ProductController::class);
+            // route category
             Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
             Route::post('/categories', [categoryController::class, 'store'])->name('categories.store');
             Route::get('/categories/{id}', [categoryController::class, 'show'])->name('category.show');

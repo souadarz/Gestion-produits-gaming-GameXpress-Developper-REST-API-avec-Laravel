@@ -52,6 +52,9 @@ class CategoryController extends Controller
         ]);
 
         $category->update($validateData);
+        return [
+            'category' => $category,
+        ];
     }
 
     /**
@@ -59,6 +62,10 @@ class CategoryController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $categorie = Category::findOrFail($id);
+        $categorie->delete();
+        return [
+            "message" => 'the categorie is deleted'
+        ];
     }
 }

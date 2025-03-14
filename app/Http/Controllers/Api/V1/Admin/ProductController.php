@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Models\Product_images;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
@@ -14,7 +16,7 @@ class ProductController extends Controller
     public function index()
     {  
         $products = Product::all();
-        return $products;
+        return $products->load('product_images');
     }
 
     /**
@@ -22,6 +24,7 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
+        
         $request->validate([
             'name' => 'required|string|max:255',
             'slug' => 'required|string|max:255',
@@ -31,7 +34,7 @@ class ProductController extends Controller
             'sub_category_id' => 'required|integer',
             'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
         ]);
-
+        
         // return $request;
         $product = Product::create([
             'name' => $request->name,
@@ -41,20 +44,20 @@ class ProductController extends Controller
             'status' => $request->status,
             'sub_category_id' => $request->sub_category_id,
         ]);
-
+        
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $index => $image) {
                 $imagePath = $image->store('products', 'public');
     
-                ProductImage::create([
+                Product_images::create([
                     'product_id' => $product->id,
                     'image_url' => $imagePath,
-                    'is_primary' => $index === 0 ? true : false // La première image est l'image principale
+                    'is_primary' => $index === 0 ? true : false
                 ]);
             }
         }
         return [
-            'product' => $product->load('images'),
+            'product' => $product->load('product_images'),
         ];
     }
 
@@ -67,7 +70,7 @@ class ProductController extends Controller
         // $product = Product::findOrFail($id);
 
         return [
-            'product' => $product,
+            'product' => $product->load('product_images'),
         ];
     }
     /**
@@ -77,27 +80,50 @@ class ProductController extends Controller
     {
         $product = Product::findOrFail($id);
 
-        $validateData = $request->validate([
-            'name' => 'required|string|max:255',
-            'slug' => 'required|string|max:255',
-            'price' => 'required|numeric|min:0',
-            'stock' => 'required|integer|min:0',
-            'status' => 'required',
-            'sub_category_id' => 'required|integer'
+        $request->validate([
+            'name' => 'sometimes|string|max:255',
+            'slug' => 'sometimes|string|max:255',
+            'price' => 'sometimes|numeric|min:0',
+            'stock' => 'sometimes|integer|min:0',
+            'status' => 'sometimes',
+            'sub_category_id' => 'sometimes|integer',
+            'imageToDelete' => 'sometimes|exists:Product_images,image_url',
+            'primaryImage' => 'sometimes|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'images.*' => 'sometimes|image|mimes:jpeg,png,jpg,gif|max:2048'
         ]);
 
-        $product->update($validateData);
-        // $product->update([
-        //     'name' => 'Produit up',
-        //     'slug' => 'produit-up', 
-        //     'price' => 26.5,
-        //     'stock' => 84,
-        //     'status' => 'disponible', 
-        //     'sub_category_id' => 1 
-        // ]);
+        $product->update($request->except(['images']));
+
+        if($request->imageToDelete){
+            foreach($request->imageToDelete as $imageDelete){
+                Storage::disk('public')->delete($imageDelete);
+            }
+            $product->product_images()->whereIn('image_url',$request->imageToDelete)->delete();
+        }
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $image) {
+                $imagePath = $image->store('products', 'public');
+    
+                Product_images::create([
+                    'product_id' => $product->id,
+                    'image_url' => $imagePath,
+                    'is_primary' => false
+                ]);
+            }
+        }
+        if($request->hasFile('primaryImage')){
+            $image = $request->file('primaryImage');
+            $imagePath = $image->store('products', 'public');
+    
+            Product_images::create([
+                'product_id' => $product->id,
+                'image_url' => $imagePath,
+                'is_primary' => true
+            ]);
+        }
 
         return [
-            'product' => $product,
+            'product' => $product->load('product_images'),
         ];
     }
 
